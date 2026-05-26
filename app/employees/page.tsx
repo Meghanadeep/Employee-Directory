@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getOverride, saveOverride, EmployeeOverride } from "@/lib/idb-profile-overrides";
 
 type Employee = {
   id: number;
@@ -1075,11 +1076,26 @@ const employees: Employee[] = [
   { id: 78, name: "Tariq Mansouri", role: "DevOps Engineer", department: "Engineering", email: "tariq@company.com", phone: "+974 55-0178", location: "Doha, Qatar", timezone: "AST (UTC+3)", manager: "Frank Chen", joined: "September 22, 2021", birthday: "May 14", pronouns: "he/him", education: "B.Eng Computer Engineering, Qatar University", bio: "Automates everything automatable. Owns CI/CD pipelines, infrastructure-as-code, and the team's deployment reliability.", skills: ["Terraform", "GitLab CI", "Docker", "Ansible"], certifications: ["HashiCorp Terraform Associate", "AWS DevOps Engineer"], languages: ["Arabic", "English"], interests: ["Falconry", "Football", "Travel", "Photography"], projects: ["IaC Migration", "GitLab CI Overhaul", "Container Hardening"], initials: "TM", gradient: "from-sky-200 to-blue-300", status: "active" },
   { id: 79, name: "Ursula Bergmann", role: "HR Business Partner", department: "Human Resources", email: "ursula@company.com", phone: "+41 79-0179", location: "Zurich, Switzerland", timezone: "CET (UTC+1)", manager: "Eva Martinez", joined: "March 1, 2023", birthday: "December 8", pronouns: "she/her", education: "M.A. Business Psychology, University of Zurich", bio: "Partners with Engineering and Product leaders to build high-performing teams and healthy culture. Specialist in leadership coaching.", skills: ["HRBP", "Coaching", "Workforce Planning", "Organisational Design"], certifications: ["ICF Professional Certified Coach", "SHRM-CP"], languages: ["German", "French", "English"], interests: ["Skiing", "Hiking", "Psychology Books", "Cooking"], projects: ["Leadership Coaching Programme", "Headcount Planning", "Team Health Surveys"], initials: "UB", gradient: "from-rose-200 to-orange-300", status: "active" },
   { id: 80, name: "Victor Cruz", role: "Customer Success Lead", department: "Sales", email: "victor@company.com", phone: "+52 55-0180", location: "Mexico City, Mexico", timezone: "CST (UTC−6)", manager: "Omar Hassan", joined: "July 5, 2022", birthday: "August 15", pronouns: "he/him", education: "B.A. Business Administration, ITAM", bio: "Leads a team of CSMs driving retention across LATAM. Brings a strong playbook for onboarding, QBRs, and expansion revenue.", skills: ["CSM Leadership", "EBR", "Expansion Revenue", "Gainsight"], certifications: ["Gainsight Certified"], languages: ["Spanish", "English", "Portuguese"], interests: ["Football", "Salsa Dancing", "Travel", "Entrepreneurship"], projects: ["LATAM Retention Programme", "Churn Reduction Initiative", "QBR Standardisation"], initials: "VC", gradient: "from-lime-200 to-green-300", status: "active" },
+  { id: 81, name: "Mei Lin", role: "Support Engineer", department: "Customer Support", email: "mei@company.com", phone: "+65 8-0181", location: "Singapore", timezone: "SGT (UTC+8)", manager: "Tobias Grant", joined: "March 14, 2023", birthday: "September 16", pronouns: "she/her", education: "B.Sc Information Systems, NTU Singapore", bio: "Resolves complex technical issues for enterprise customers. Expert at diagnosing API and integration problems quickly.", skills: ["Technical Support", "API Debugging", "Zendesk", "SQL"], certifications: ["Zendesk Support Certified"], languages: ["English", "Mandarin", "Malay"], interests: ["Pottery", "Running", "Cooking", "Board Games"], projects: ["Support Knowledge Base", "Escalation Triage Process", "Customer Health Alerts"], initials: "ML", gradient: "from-sky-200 to-teal-300", status: "active" },
+  { id: 82, name: "Tobias Grant", role: "Support Lead", department: "Customer Support", email: "tobias@company.com", phone: "+44 7900-0182", location: "London, UK", timezone: "GMT (UTC+0)", manager: "Eva Martinez", joined: "November 3, 2021", birthday: "May 19", pronouns: "he/him", education: "B.A. Communications, University of Leeds", bio: "Builds and coaches the global support team. Obsessed with CSAT and time-to-resolution metrics. Turned support into a growth driver.", skills: ["Support Operations", "Zendesk", "CSAT", "Team Management"], certifications: ["ITIL 4 Foundation", "Zendesk Admin Certified"], languages: ["English", "French"], interests: ["Cycling", "Jazz", "Travel", "Coffee"], projects: ["Global Support Playbook", "CSAT Improvement Initiative", "Tier 2 Escalation Redesign"], initials: "TG", gradient: "from-cyan-200 to-emerald-300", status: "active" },
+  { id: 83, name: "Amelia Ford", role: "Technical Support Specialist", department: "Customer Support", email: "amelia@company.com", phone: "+1 555-0183", location: "Austin, TX", timezone: "CST (UTC−6)", manager: "Tobias Grant", joined: "January 10, 2024", birthday: "March 4", pronouns: "she/her", education: "B.S. Computer Science, UT Austin", bio: "Front-line hero who handles tricky technical tickets with speed and empathy. Former developer who made the jump to support.", skills: ["Troubleshooting", "APIs", "Python", "Zendesk"], certifications: [], languages: ["English", "Spanish"], interests: ["Rock Climbing", "Gaming", "Open Source", "Podcasts"], projects: ["Self-Service Portal", "Support Automation", "Onboarding Troubleshooting Guide"], initials: "AF", gradient: "from-teal-200 to-sky-300", status: "busy" },
+  { id: 84, name: "Rohan Mehta", role: "VP Business Development", department: "Business Development", email: "rohan@company.com", phone: "+91 98-0184", location: "Mumbai, India", timezone: "IST (UTC+5:30)", manager: "Sandra Lee", joined: "August 12, 2020", birthday: "October 3", pronouns: "he/him", education: "MBA, IIM Ahmedabad", bio: "Drives strategic partnerships and new market entry. Closed partnerships with 3 Fortune 100 companies in 2025.", skills: ["Partnerships", "Negotiation", "Market Entry", "GTM Strategy"], certifications: [], languages: ["Hindi", "English", "Gujarati"], interests: ["Cricket", "Travel", "Chess", "Entrepreneurship"], projects: ["APAC Expansion", "Strategic Partnership Programme", "Channel Partner Framework"], initials: "RM", gradient: "from-amber-200 to-yellow-300", status: "active" },
+  { id: 85, name: "Claire Dupuis", role: "Partnerships Manager", department: "Business Development", email: "claire@company.com", phone: "+33 6-0185", location: "Paris, France", timezone: "CET (UTC+1)", manager: "Rohan Mehta", joined: "April 6, 2022", birthday: "July 14", pronouns: "she/her", education: "M.Sc International Business, Sciences Po Paris", bio: "Manages technology integrations and co-selling relationships across EMEA. Builds win-win partnerships that last.", skills: ["Partner Management", "GTM", "Salesforce", "Contract Negotiation"], certifications: ["Salesforce Partner Certified"], languages: ["French", "English", "Spanish"], interests: ["Wine", "Architecture", "Running", "Jazz"], projects: ["EMEA Partner Expansion", "Reseller Programme", "Integration Marketplace"], initials: "CD", gradient: "from-yellow-200 to-orange-300", status: "active" },
+  { id: 86, name: "James Okoro", role: "Strategic Alliances Lead", department: "Business Development", email: "james@company.com", phone: "+234 80-0186", location: "Lagos, Nigeria", timezone: "WAT (UTC+1)", manager: "Rohan Mehta", joined: "October 18, 2022", birthday: "February 28", pronouns: "he/him", education: "B.Sc Business Administration, University of Lagos", bio: "Leads strategic alliance deals with hyperscalers and ecosystem partners. Deep experience in cloud marketplace listings.", skills: ["Strategic Alliances", "AWS Marketplace", "Deal Structuring", "Negotiation"], certifications: ["AWS Partner Certified"], languages: ["English", "Yoruba"], interests: ["Football", "Afrobeats", "Travel", "Mentoring"], projects: ["AWS Marketplace Listing", "Cloud Alliance Programme", "Partner Summit 2026"], initials: "JO", gradient: "from-orange-200 to-yellow-300", status: "away" },
+  { id: 87, name: "Sandra Lee", role: "CEO", department: "Executive", email: "sandra@company.com", phone: "+1 555-0187", location: "San Francisco, CA", timezone: "PST (UTC−8)", manager: "Board of Directors", joined: "January 1, 2018", birthday: "November 12", pronouns: "she/her", education: "MBA, Harvard Business School; B.S. Computer Science, MIT", bio: "Visionary leader who founded the company and grew it from 5 to 500+ people. Passionate about building software that matters.", skills: ["Leadership", "Strategy", "Fundraising", "Product Vision"], certifications: [], languages: ["English", "Mandarin"], interests: ["Sailing", "Reading", "Mentoring Founders", "Marathon Running"], projects: ["2026 Company Strategy", "Series C Fundraising", "Board Programme"], initials: "SL", gradient: "from-violet-300 to-purple-400", status: "active" },
+  { id: 88, name: "Marcus Webb", role: "CTO", department: "Executive", email: "marcus.w@company.com", phone: "+1 555-0188", location: "San Francisco, CA", timezone: "PST (UTC−8)", manager: "Sandra Lee", joined: "March 15, 2018", birthday: "April 7", pronouns: "he/him", education: "Ph.D. Computer Science, Stanford University", bio: "Architect of the company's technical vision. Keeps the engineering org moving fast and the platform robust. Open-source advocate.", skills: ["Technical Strategy", "Architecture", "Engineering Culture", "Open Source"], certifications: [], languages: ["English"], interests: ["Open Source", "Rock Climbing", "Science Fiction", "Home Lab"], projects: ["Platform Roadmap 2026", "Engineering Hiring", "Tech Debt Reduction Initiative"], initials: "MW", gradient: "from-indigo-300 to-blue-400", status: "active" },
+  { id: 89, name: "Fiona Cheng", role: "CFO", department: "Executive", email: "fiona@company.com", phone: "+1 555-0189", location: "New York, NY", timezone: "EST (UTC−5)", manager: "Sandra Lee", joined: "June 1, 2019", birthday: "August 22", pronouns: "she/her", education: "B.Com Finance, University of Hong Kong; CFA Charterholder", bio: "Manages the company's financial health with rigour and clarity. Led the Series B and Series C financing rounds.", skills: ["Financial Strategy", "Fundraising", "FP&A", "Investor Relations"], certifications: ["CFA Charterholder", "CPA"], languages: ["English", "Cantonese", "Mandarin"], interests: ["Sailing", "Classical Music", "Travel", "Fine Dining"], projects: ["Series C Close", "Financial Systems Upgrade", "Board Reporting Cadence"], initials: "FC", gradient: "from-emerald-300 to-teal-400", status: "active" },
+  { id: 90, name: "Meghana Deep", role: "Full Stack Engineer", department: "Engineering", email: "meghanadeep3@gmail.com", phone: "+91 98-0190", location: "Bangalore, India", timezone: "IST (UTC+5:30)", manager: "Marcus Webb", joined: "January 15, 2025", birthday: "October 12", pronouns: "she/her", education: "B.Tech Computer Science, IIT Hyderabad", bio: "Passionate full-stack engineer who loves building elegant products from frontend to backend. Advocate for developer experience and clean code.", skills: ["TypeScript", "React", "Next.js", "Node.js"], certifications: ["AWS Cloud Practitioner", "Google Associate Cloud Engineer"], languages: ["English", "Telugu", "Hindi"], interests: ["Open Source", "Reading", "Badminton", "Travel"], projects: ["Employee Directory", "Internal Dev Tools", "API Modernisation"], initials: "MD", gradient: "from-purple-200 to-fuchsia-300", status: "active" },
 ];
 
 const PAGE_SIZE = 40;
 
 const allDepts = ["All", ...Array.from(new Set(employees.map((e) => e.department))).sort()];
+
+function deptCount(dept: string) {
+  if (dept === "All") return employees.length;
+  return employees.filter((e) => e.department === dept).length;
+}
 
 const statusConfig: Record<Employee["status"], { dot: string; label: string }> = {
   active: { dot: "bg-emerald-300", label: "Active" },
@@ -1154,6 +1170,30 @@ function GraduationIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>
+  );
+}
+
+function applyOverride(emp: Employee, override: EmployeeOverride | null): Employee {
+  if (!override) return emp;
+  return {
+    ...emp,
+    ...(override.bio !== undefined && { bio: override.bio }),
+    ...(override.phone !== undefined && { phone: override.phone }),
+    ...(override.location !== undefined && { location: override.location }),
+    ...(override.timezone !== undefined && { timezone: override.timezone }),
+    ...(override.pronouns !== undefined && { pronouns: override.pronouns }),
+    ...(override.status !== undefined && { status: override.status }),
+    ...(override.skills !== undefined && { skills: override.skills }),
+    ...(override.languages !== undefined && { languages: override.languages }),
+    ...(override.interests !== undefined && { interests: override.interests }),
+  };
+}
+
 function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3">
@@ -1168,7 +1208,12 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
   );
 }
 
-function EmployeeDetailPanel({ emp, onClose }: { emp: Employee; onClose: () => void }) {
+function EmployeeDetailPanel({ emp, onClose, isOwnProfile, onEditClick }: {
+  emp: Employee;
+  onClose: () => void;
+  isOwnProfile?: boolean;
+  onEditClick?: () => void;
+}) {
   const status = statusConfig[emp.status];
   return (
     <>
@@ -1177,7 +1222,7 @@ function EmployeeDetailPanel({ emp, onClose }: { emp: Employee; onClose: () => v
         onClick={onClose}
       >
       <div className="relative z-50 w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl shadow-stone-300 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className={`relative bg-gradient-to-br ${emp.gradient} px-6 pt-12 pb-10`}>
+        <div className="relative bg-gradient-to-br from-[#f5ebe0] to-[#e0c9a6] px-6 pt-12 pb-10">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/10 text-stone-600 hover:bg-black/15 transition cursor-pointer"
@@ -1258,7 +1303,7 @@ function EmployeeDetailPanel({ emp, onClose }: { emp: Employee; onClose: () => v
               {emp.languages.map((lang) => (
                 <span
                   key={lang}
-                  className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+                  className="rounded-lg bg-stone-50 border border-stone-200 px-3 py-1 text-xs font-medium text-stone-600"
                 >
                   {lang}
                 </span>
@@ -1268,9 +1313,19 @@ function EmployeeDetailPanel({ emp, onClose }: { emp: Employee; onClose: () => v
         </div>
 
         <div className="shrink-0 border-t border-stone-100 bg-white px-6 py-4 flex gap-3">
+          {isOwnProfile && (
+            <button
+              onClick={onEditClick}
+              className="flex items-center justify-center gap-1.5 rounded-2xl border border-stone-300 bg-stone-100 px-3.5 py-3 text-sm font-semibold text-stone-700 hover:bg-stone-200 transition"
+              title="Edit your profile"
+            >
+              <PencilIcon />
+              Edit
+            </button>
+          )}
           <a
             href={`mailto:${emp.email}`}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r ${emp.gradient} py-3 text-sm font-bold text-stone-700 shadow-md hover:opacity-90 transition`}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#e8d5b7] to-[#d4b59a] py-3 text-sm font-bold text-stone-800 shadow-md hover:opacity-90 transition"
           >
             <MailIcon />
             Send Email
@@ -1283,6 +1338,185 @@ function EmployeeDetailPanel({ emp, onClose }: { emp: Employee; onClose: () => v
           </a>
         </div>
       </div>
+      </div>
+    </>
+  );
+}
+
+function EditProfilePanel({ emp, onClose, onSave }: {
+  emp: Employee;
+  onClose: () => void;
+  onSave: (override: EmployeeOverride) => void;
+}) {
+  const [bio, setBio] = useState(emp.bio);
+  const [phone, setPhone] = useState(emp.phone);
+  const [location, setLocation] = useState(emp.location);
+  const [timezone, setTimezone] = useState(emp.timezone);
+  const [pronouns, setPronouns] = useState(emp.pronouns);
+  const [status, setStatus] = useState<Employee["status"]>(emp.status);
+  const [skills, setSkills] = useState(emp.skills.join(", "));
+  const [languages, setLanguages] = useState(emp.languages.join(", "));
+  const [interests, setInterests] = useState(emp.interests.join(", "));
+  const [saving, setSaving] = useState(false);
+
+  const inputCls = "w-full rounded-xl bg-stone-50 border border-stone-200 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100 transition";
+  const labelCls = "block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2";
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const override: EmployeeOverride = {
+        email: emp.email,
+        bio,
+        phone,
+        location,
+        timezone,
+        pronouns,
+        status,
+        skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+        languages: languages.split(",").map((s) => s.trim()).filter(Boolean),
+        interests: interests.split(",").map((s) => s.trim()).filter(Boolean),
+      };
+      await saveOverride(override);
+      onSave(override);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-stone-900/30 backdrop-blur-sm flex items-center justify-center p-6 cursor-pointer"
+        onClick={onClose}
+      >
+        <div
+          className="relative z-50 w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl shadow-stone-300 overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="relative bg-gradient-to-br from-[#f5ebe0] to-[#e0c9a6] px-6 pt-8 pb-6">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/10 text-stone-600 hover:bg-black/15 transition cursor-pointer"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl overflow-hidden ring-4 ring-white/60 shadow-xl bg-white shrink-0">
+                <img
+                  src={`https://i.pravatar.cc/192?u=${encodeURIComponent(emp.email)}`}
+                  alt={emp.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-0.5">Editing Profile</p>
+                <h2 className="text-xl font-bold text-stone-800">{emp.name}</h2>
+                <p className="text-stone-500 text-sm mt-0.5">{emp.role} · {emp.department}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Form body */}
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+            {/* Status */}
+            <div>
+              <p className={labelCls}>Status</p>
+              <div className="flex gap-2">
+                {(["active", "away", "busy"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold border transition ${
+                      status === s
+                        ? "bg-stone-100 text-stone-800 border-stone-400"
+                        : "bg-stone-50 text-stone-500 border-stone-200 hover:bg-stone-100"
+                    }`}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${statusConfig[s].dot}`} />
+                    {statusConfig[s].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-px bg-stone-100" />
+
+            {/* Bio */}
+            <div>
+              <label className={labelCls}>Bio</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                placeholder="Tell your colleagues about yourself…"
+                className={`${inputCls} resize-none`}
+              />
+            </div>
+
+            <div className="h-px bg-stone-100" />
+
+            {/* Contact / Location */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Phone</label>
+                <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555-0000" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Pronouns</label>
+                <input type="text" value={pronouns} onChange={(e) => setPronouns(e.target.value)} placeholder="she/her" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Location</label>
+                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, Country" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Timezone</label>
+                <input type="text" value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="PST (UTC-8)" className={inputCls} />
+              </div>
+            </div>
+
+            <div className="h-px bg-stone-100" />
+
+            {/* Array fields */}
+            <div>
+              <label className={labelCls}>Skills</label>
+              <p className="text-[11px] text-stone-400 -mt-1 mb-2">Comma-separated</p>
+              <input type="text" value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="TypeScript, React, Node.js" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Languages</label>
+              <p className="text-[11px] text-stone-400 -mt-1 mb-2">Comma-separated</p>
+              <input type="text" value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder="English, Spanish" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Interests</label>
+              <p className="text-[11px] text-stone-400 -mt-1 mb-2">Comma-separated</p>
+              <input type="text" value={interests} onChange={(e) => setInterests(e.target.value)} placeholder="Hiking, Photography" className={inputCls} />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="shrink-0 border-t border-stone-100 bg-white px-6 py-4 flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 rounded-2xl border border-stone-200 bg-stone-50 py-3 text-sm font-bold text-stone-600 hover:bg-stone-100 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#e8d5b7] to-[#d4b59a] py-3 text-sm font-bold text-stone-800 shadow-md hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );
@@ -1347,7 +1581,7 @@ function Pagination({
             aria-current={p === current ? "page" : undefined}
             className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition-all duration-150 ${
               p === current
-                ? "bg-violet-200 text-violet-800 shadow-md scale-105"
+                ? "bg-stone-800 text-stone-50 shadow-md scale-105"
                 : "border border-stone-200 bg-white text-stone-600 shadow-sm hover:border-stone-300 hover:bg-stone-50"
             }`}
           >
@@ -1378,12 +1612,20 @@ export default function EmployeesPage() {
   const [selected, setSelected] = useState<Employee | null>(null);
   const [page, setPage] = useState(1);
   const [authChecked, setAuthChecked] = useState(false);
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
+  const [myOverride, setMyOverride] = useState<EmployeeOverride | null>(null);
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     if (!sessionStorage.getItem("isLoggedIn")) {
       router.replace("/");
     } else {
       setAuthChecked(true);
+      const email = sessionStorage.getItem("currentUserEmail") ?? null;
+      setLoggedInEmail(email);
+      if (email) {
+        getOverride(email).then((o) => setMyOverride(o));
+      }
     }
   }, [router]);
 
@@ -1421,8 +1663,8 @@ export default function EmployeesPage() {
       <nav className="sticky top-0 z-30 bg-white border-b border-stone-200/80 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-200 to-indigo-300 flex items-center justify-center shadow-md shadow-violet-100">
-              <svg className="h-4 w-4 text-violet-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#e8d5b7] to-[#d4b59a] flex items-center justify-center shadow-md shadow-stone-200">
+              <svg className="h-4 w-4 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4 6v-1a4 4 0 00-4-4H9a4 4 0 00-4 4v1m8 0a4 4 0 014-4h1a4 4 0 014 4v1M15 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
@@ -1435,11 +1677,21 @@ export default function EmployeesPage() {
               <span className="hidden sm:inline">{allDepts.length - 1} departments</span>
             </div>
             <button
+              onClick={() => router.push("/appraisals")}
+              className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-100 hover:border-stone-300 transition"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <span className="hidden sm:inline">Appraisals</span>
+            </button>
+            <button
               onClick={() => {
                 sessionStorage.removeItem("isLoggedIn");
+                sessionStorage.removeItem("currentUserEmail");
                 router.replace("/");
               }}
-              className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm font-semibold text-amber-800 shadow-sm hover:bg-amber-100 hover:border-amber-400 transition"
+              className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-100 hover:border-stone-300 transition"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -1469,25 +1721,34 @@ export default function EmployeesPage() {
             placeholder="Search by name, role, department, or location…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-stone-200 bg-white pl-11 pr-4 py-3.5 text-stone-800 placeholder-stone-400 shadow-sm focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 transition text-sm"
+            className="w-full rounded-2xl border border-stone-200 bg-white pl-11 pr-4 py-3.5 text-stone-800 placeholder-stone-400 shadow-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100 transition text-sm"
           />
         </div>
 
         {/* Department pill filters */}
         <div className="flex flex-wrap gap-2 mb-8">
-          {allDepts.map((dept) => (
-            <button
-              key={dept}
-              onClick={() => setSelectedDept(dept)}
-              className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
-                selectedDept === dept
-                  ? "bg-violet-200 text-violet-800 border border-violet-300 shadow-sm"
-                  : "bg-white border border-stone-200 text-stone-500 hover:border-stone-300 hover:text-stone-700 shadow-sm"
-              }`}
-            >
-              {dept}
-            </button>
-          ))}
+          {allDepts.map((dept) => {
+            const count = deptCount(dept);
+            const active = selectedDept === dept;
+            return (
+              <button
+                key={dept}
+                onClick={() => setSelectedDept(dept)}
+                className={`cursor-pointer flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                  active
+                    ? "bg-stone-800 text-stone-50 border border-stone-700 shadow-sm"
+                    : "bg-white border border-stone-200 text-stone-500 hover:border-stone-300 hover:text-stone-700 shadow-sm"
+                }`}
+              >
+                {dept}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
+                  active ? "bg-stone-600 text-stone-100" : "bg-stone-100 text-stone-400"
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Results count */}
@@ -1523,10 +1784,10 @@ export default function EmployeesPage() {
                   <button
                     key={emp.id}
                     onClick={() => setSelected(emp)}
-                    className="cursor-pointer group relative flex flex-col bg-white rounded-3xl overflow-hidden text-left border border-stone-200/50 shadow-md hover:shadow-2xl hover:-translate-y-1.5 hover:border-stone-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:ring-offset-2 focus:ring-offset-[#f5f0e8]"
+                    className="cursor-pointer group relative flex flex-col bg-white rounded-3xl overflow-hidden text-left border border-stone-200/50 shadow-md hover:shadow-2xl hover:-translate-y-1.5 hover:border-stone-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-stone-400/30 focus:ring-offset-2 focus:ring-offset-[#f5f0e8]"
                   >
                     {/* Gradient banner */}
-                    <div className={`bg-gradient-to-br ${emp.gradient} h-[68px] w-full shrink-0`} />
+                    <div className="bg-gradient-to-br from-[#f5ebe0] to-[#e0c9a6] h-[68px] w-full shrink-0" />
 
                     {/* Avatar overlapping banner and body */}
                     <div className="-mt-10 flex justify-center relative z-10 shrink-0">
@@ -1557,11 +1818,7 @@ export default function EmployeesPage() {
                         <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600 font-semibold">
                           {emp.department}
                         </span>
-                        <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border ${
-                          emp.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                          emp.status === "away" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                          "bg-rose-50 text-rose-700 border-rose-200"
-                        }`}>
+                        <span className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border bg-stone-50 text-stone-600 border-stone-200">
                           <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
                           {status.label}
                         </span>
@@ -1589,7 +1846,7 @@ export default function EmployeesPage() {
                     </div>
 
                     {/* Hover ring glow */}
-                    <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-transparent group-hover:ring-violet-300/40 transition-all duration-300 pointer-events-none" />
+                    <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-transparent group-hover:ring-stone-400/30 transition-all duration-300 pointer-events-none" />
                   </button>
                 );
               })}
@@ -1608,8 +1865,23 @@ export default function EmployeesPage() {
         )}
       </main>
 
-      {selected && (
-        <EmployeeDetailPanel emp={selected} onClose={() => setSelected(null)} />
+      {selected && !editMode && (
+        <EmployeeDetailPanel
+          emp={selected.email === loggedInEmail ? applyOverride(selected, myOverride) : selected}
+          onClose={() => { setSelected(null); setEditMode(false); }}
+          isOwnProfile={selected.email === loggedInEmail}
+          onEditClick={() => setEditMode(true)}
+        />
+      )}
+      {selected && editMode && (
+        <EditProfilePanel
+          emp={applyOverride(selected, myOverride)}
+          onClose={() => setEditMode(false)}
+          onSave={(override) => {
+            setMyOverride(override);
+            setEditMode(false);
+          }}
+        />
       )}
     </div>
   );

@@ -40,6 +40,11 @@ function LoginForm() {
       }
       setError("");
       sessionStorage.setItem("isLoggedIn", "true");
+      if (idbUser) {
+        sessionStorage.setItem("currentUserEmail", idbUser.email);
+      } else {
+        sessionStorage.removeItem("currentUserEmail");
+      }
       router.push("/employees");
     } catch {
       setError("Login failed. Please try again.");
@@ -93,7 +98,7 @@ function LoginForm() {
                     placeholder="Enter username"
                     value={login}
                     onChange={(e) => setLogin(e.target.value)}
-                    className="w-full rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 transition"
+                    className="w-full rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100 transition"
                   />
                 </div>
 
@@ -109,7 +114,7 @@ function LoginForm() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 transition"
+                      className="w-full rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100 transition"
                     />
                     <button
                       type="button"
@@ -130,7 +135,7 @@ function LoginForm() {
                     </button>
                   </div>
                   <div className="flex justify-end mt-1.5">
-                    <a href="/forgot-password" className="text-xs text-gray-400 hover:text-violet-600 transition">
+                    <a href="/forgot-password" className="text-xs text-gray-400 hover:text-stone-700 transition">
                       Forgot password?
                     </a>
                   </div>
@@ -145,7 +150,7 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-violet-200 hover:bg-violet-300 active:bg-violet-400 py-2.5 text-sm font-bold text-violet-900 transition focus:outline-none focus:ring-2 focus:ring-violet-200 mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl bg-stone-800 hover:bg-stone-700 active:bg-stone-900 py-2.5 text-sm font-bold text-stone-50 transition focus:outline-none focus:ring-2 focus:ring-stone-200 mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Signing in…" : "Submit"}
                 </button>
