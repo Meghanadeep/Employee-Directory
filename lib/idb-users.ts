@@ -52,3 +52,20 @@ export async function getUserByEmail(email: string): Promise<StoredUser | null> 
     req.onerror = () => reject(req.error);
   });
 }
+
+export async function updateUserPassword(username: string, newPassword: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(username);
+    req.onsuccess = () => {
+      const user = req.result;
+      if (!user) { reject(new Error("User not found")); return; }
+      store.put({ ...user, password: newPassword });
+    };
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}

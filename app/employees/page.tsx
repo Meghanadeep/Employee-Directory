@@ -1189,8 +1189,12 @@ function EmployeeDetailPanel({ emp, onClose }: { emp: Employee; onClose: () => v
 
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-4">
-              <div className="h-24 w-24 rounded-3xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-stone-700 font-bold text-3xl ring-4 ring-white/60 shadow-xl">
-                {emp.initials}
+              <div className="h-24 w-24 rounded-3xl overflow-hidden ring-4 ring-white/60 shadow-xl bg-white">
+                <img
+                  src={`https://i.pravatar.cc/192?u=${encodeURIComponent(emp.email)}`}
+                  alt={emp.name}
+                  className="h-full w-full object-cover"
+                />
               </div>
               <span className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white ${status.dot} shadow-md`} />
             </div>
@@ -1519,41 +1523,73 @@ export default function EmployeesPage() {
                   <button
                     key={emp.id}
                     onClick={() => setSelected(emp)}
-                    className="cursor-pointer group relative bg-white rounded-3xl overflow-hidden text-left border border-stone-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:ring-offset-2 focus:ring-offset-[#f5f0e8]"
+                    className="cursor-pointer group relative flex flex-col bg-white rounded-3xl overflow-hidden text-left border border-stone-200/50 shadow-md hover:shadow-2xl hover:-translate-y-1.5 hover:border-stone-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:ring-offset-2 focus:ring-offset-[#f5f0e8]"
                   >
-                    <div className={`bg-gradient-to-br ${emp.gradient} px-5 pt-6 pb-5 flex flex-col items-center`}>
-                      <div className="relative mb-3">
-                        <div className="h-[72px] w-[72px] rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-stone-700 font-bold text-2xl ring-2 ring-white/60 shadow-lg">
-                          {emp.initials}
+                    {/* Gradient banner */}
+                    <div className={`bg-gradient-to-br ${emp.gradient} h-[68px] w-full shrink-0`} />
+
+                    {/* Avatar overlapping banner and body */}
+                    <div className="-mt-10 flex justify-center relative z-10 shrink-0">
+                      <div className="relative">
+                        <div className="h-20 w-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl bg-white">
+                          <img
+                            src={`https://i.pravatar.cc/160?u=${encodeURIComponent(emp.email)}`}
+                            alt={emp.name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
                         <span
                           className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white ${status.dot} shadow-md`}
                           title={status.label}
                         />
                       </div>
-                      <p className="text-stone-700 font-bold text-sm leading-tight text-center">{emp.name}</p>
-                      <p className="text-stone-500 text-xs mt-0.5 font-medium text-center">{emp.role}</p>
                     </div>
 
-                    <div className="px-5 py-4 space-y-3">
-                      <div className="flex justify-center">
-                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-500 font-semibold">
+                    {/* Card body */}
+                    <div className="px-5 pt-3 pb-5 flex flex-col items-center gap-3 flex-1">
+                      <div className="text-center">
+                        <p className="font-bold text-stone-900 text-sm leading-tight">{emp.name}</p>
+                        <p className="text-stone-500 text-xs mt-0.5 font-medium">{emp.role}</p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600 font-semibold">
                           {emp.department}
                         </span>
+                        <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border ${
+                          emp.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                          emp.status === "away" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                          "bg-rose-50 text-rose-700 border-rose-200"
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                          {status.label}
+                        </span>
                       </div>
-                      <div className="space-y-1.5 pt-0.5">
-                        <div className="flex items-center gap-2 text-xs text-stone-400">
-                          <LocationIcon />
-                          <span className="truncate">{emp.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-stone-400">
-                          <MailIcon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">{emp.email}</span>
-                        </div>
+
+                      <div className="flex items-center gap-1.5 text-xs text-stone-400 w-full justify-center">
+                        <LocationIcon />
+                        <span className="truncate">{emp.location}</span>
                       </div>
+
+                      {emp.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {emp.skills.slice(0, 2).map((skill) => (
+                            <span key={skill} className="rounded-full bg-stone-50 border border-stone-200 px-2.5 py-0.5 text-[11px] text-stone-500 font-medium">
+                              {skill}
+                            </span>
+                          ))}
+                          {emp.skills.length > 2 && (
+                            <span className="rounded-full bg-stone-50 border border-stone-200 px-2.5 py-0.5 text-[11px] text-stone-400">
+                              +{emp.skills.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="absolute inset-0 rounded-3xl bg-stone-900/0 group-hover:bg-stone-900/[0.015] transition-colors duration-300 pointer-events-none" />
+                    {/* Hover ring glow */}
+                    <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-transparent group-hover:ring-violet-300/40 transition-all duration-300 pointer-events-none" />
                   </button>
                 );
               })}
