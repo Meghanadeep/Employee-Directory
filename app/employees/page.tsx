@@ -1764,17 +1764,29 @@ export default function EmployeesPage() {
         </div>
 
         {/* Search bar */}
-        <div className="relative mb-4">
+        <div className="relative mb-4 max-w-md">
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
             <SearchIcon />
           </span>
           <input
             type="text"
-            placeholder="Search by name, role, department, or location…"
+            placeholder="Search by name, role, department…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-stone-200 bg-white pl-11 pr-4 py-3.5 text-stone-800 placeholder-stone-400 shadow-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100 transition text-sm"
+            className="w-full rounded-2xl border border-stone-200 bg-white pl-11 pr-10 py-3 text-stone-800 placeholder-stone-400 shadow-sm focus:border-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-100 transition text-sm"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition"
+              aria-label="Clear search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Department pill filters */}
