@@ -313,9 +313,12 @@ export default function AppraisalDetailPage() {
   if (!authChecked || !appraisal) return null;
 
   const isAdmin = !loggedInEmail;
+  const userRole = typeof window !== "undefined" ? sessionStorage.getItem("userRole") : null;
+  const isManager = userRole === "manager" || userRole === "admin";
   const loggedInEmployee = employees.find((e) => e.email === loggedInEmail);
   const canEdit = isAdmin || (!!emp && emp.email === loggedInEmail);
-  const canGiveManagerReview = isAdmin || isManagerRole(loggedInEmployee?.role ?? "");
+  const canGiveManagerReview = isAdmin || isManager || isManagerRole(loggedInEmployee?.role ?? "");
+  const canView = canEdit || canGiveManagerReview;
 
   if (!emp) {
     return (
@@ -325,11 +328,43 @@ export default function AppraisalDetailPage() {
     );
   }
 
+  if (!canView) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(145deg, #fdf6ed 0%, #f0e0c8 55%, #e5c9a0 100%)" }}>
+        <div className="bg-white rounded-3xl border border-stone-200 shadow-lg p-8 max-w-sm w-full text-center space-y-4 mx-4">
+          <div className="h-12 w-12 rounded-2xl bg-stone-100 flex items-center justify-center mx-auto">
+            <svg className="h-6 w-6 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-bold text-stone-800 text-lg">Access Restricted</p>
+            <p className="text-sm text-stone-500 mt-1">You can only view your own appraisal.</p>
+          </div>
+          {loggedInEmployee && (
+            <button
+              onClick={() => router.replace(`/appraisals/${loggedInEmployee.id}`)}
+              className="w-full rounded-2xl bg-stone-800 hover:bg-stone-700 py-3 text-sm font-bold text-stone-50 transition"
+            >
+              Go to My Appraisal
+            </button>
+          )}
+          <button
+            onClick={() => router.back()}
+            className="w-full rounded-2xl border border-stone-200 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50 transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const status: AppraisalStatus = computeStatus(appraisal);
   const statusLabels: Record<AppraisalStatus, string> = {
     pending: "Pending",
-    "self-submitted": "Self Done",
-    "manager-submitted": "Manager Done",
+    "self-submitted": "Self Completed",
+    "manager-submitted": "Manager Completed",
     complete: "Complete",
   };
   const statusColors: Record<AppraisalStatus, string> = {
@@ -416,7 +451,6 @@ export default function AppraisalDetailPage() {
                 <p className="text-stone-600 text-sm mt-0.5 font-medium">{emp.role}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-semibold text-stone-600">{emp.department}</span>
-                  <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-semibold text-stone-600">{PERIOD}</span>
                 </div>
               </div>
             </div>

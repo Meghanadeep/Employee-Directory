@@ -7,6 +7,7 @@ export interface StoredUser {
   password: string;
   name: string;
   email: string;
+  role?: "employee" | "manager";
 }
 
 function openDB(): Promise<IDBDatabase> {

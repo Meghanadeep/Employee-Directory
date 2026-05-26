@@ -36,6 +36,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"employee" | "manager">("employee");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +75,7 @@ export default function RegisterPage() {
         setError("Username already taken. Please choose another.");
         return;
       }
-      await saveUser({ username, password, name, email });
+      await saveUser({ username, password, name, email, role });
       router.push("/");
     } catch {
       setError("Failed to create account. Please try again.");
@@ -161,6 +162,39 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-xl bg-gray-50 border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 transition"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Role
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRole("employee")}
+                      className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold transition focus:outline-none ${
+                        role === "employee"
+                          ? "border-stone-400 bg-stone-100 text-stone-800"
+                          : "border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300"
+                      }`}
+                    >
+                      Employee
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole("manager")}
+                      className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold transition focus:outline-none ${
+                        role === "manager"
+                          ? "border-stone-400 bg-stone-100 text-stone-800"
+                          : "border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300"
+                      }`}
+                    >
+                      Manager
+                    </button>
+                  </div>
+                  {role === "manager" && (
+                    <p className="mt-1 text-xs text-stone-500">Managers can view all appraisals and submit manager reviews.</p>
+                  )}
                 </div>
 
                 <div>

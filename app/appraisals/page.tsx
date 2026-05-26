@@ -6,11 +6,77 @@ import { employees } from "@/lib/employees";
 import { getAllAppraisals, type Appraisal, type AppraisalStatus, computeStatus, avgScore } from "@/lib/idb-appraisals";
 
 const PERIOD = "2026 H1";
+const PAGE_SIZE = 20;
+
+const MANAGER_ROLE_KEYWORDS = ["Manager", "Lead", "Head of", "VP ", "CEO", "CTO", "CFO", "Director"];
+function isManagerRole(role: string): boolean {
+  return MANAGER_ROLE_KEYWORDS.some((kw) => role.includes(kw));
+}
+
+function getPageNumbers(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "…")[] = [];
+  if (current <= 4) {
+    pages.push(1, 2, 3, 4, 5, "…", total);
+  } else if (current >= total - 3) {
+    pages.push(1, "…", total - 4, total - 3, total - 2, total - 1, total);
+  } else {
+    pages.push(1, "…", current - 1, current, current + 1, "…", total);
+  }
+  return pages;
+}
+
+function Pagination({ current, total, onChange }: { current: number; total: number; onChange: (p: number) => void }) {
+  if (total <= 1) return null;
+  const pages = getPageNumbers(current, total);
+  return (
+    <nav className="flex items-center gap-1.5" aria-label="Pagination">
+      <button
+        onClick={() => onChange(current - 1)}
+        disabled={current === 1}
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 shadow-sm transition hover:border-stone-300 hover:bg-stone-50 disabled:pointer-events-none disabled:opacity-35"
+        aria-label="Previous page"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      {pages.map((p, i) =>
+        p === "…" ? (
+          <span key={`e-${i}`} className="flex h-9 w-9 items-center justify-center text-sm text-stone-400 select-none">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p as number)}
+            aria-current={p === current ? "page" : undefined}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold transition-all duration-150 ${
+              p === current
+                ? "bg-stone-800 text-stone-50 shadow-md scale-105"
+                : "border border-stone-200 bg-white text-stone-600 shadow-sm hover:border-stone-300 hover:bg-stone-50"
+            }`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button
+        onClick={() => onChange(current + 1)}
+        disabled={current === total}
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 shadow-sm transition hover:border-stone-300 hover:bg-stone-50 disabled:pointer-events-none disabled:opacity-35"
+        aria-label="Next page"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </nav>
+  );
+}
 
 const statusMeta: Record<AppraisalStatus, { label: string; bg: string; text: string; dot: string }> = {
   pending: { label: "Pending", bg: "bg-stone-50", text: "text-stone-400", dot: "bg-stone-300" },
-  "self-submitted": { label: "Self Done", bg: "bg-stone-50", text: "text-stone-600", dot: "bg-stone-400" },
-  "manager-submitted": { label: "Manager Done", bg: "bg-stone-50", text: "text-stone-600", dot: "bg-stone-600" },
+  "self-submitted": { label: "Self Completed", bg: "bg-stone-50", text: "text-stone-600", dot: "bg-stone-400" },
+  "manager-submitted": { label: "Manager Completed", bg: "bg-stone-50", text: "text-stone-600", dot: "bg-stone-600" },
   complete: { label: "Complete", bg: "bg-stone-50", text: "text-stone-700", dot: "bg-stone-800" },
 };
 
@@ -34,17 +100,27 @@ function StarDisplay({ score }: { score: number }) {
 export default function AppraisalsPage() {
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
+  const [canSeeAll, setCanSeeAll] = useState(false);
   const [appraisals, setAppraisals] = useState<Record<number, Appraisal>>({});
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<"All" | AppraisalStatus>("All");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!sessionStorage.getItem("isLoggedIn")) {
       router.replace("/");
-    } else {
-      setAuthChecked(true);
+      return;
     }
+    const email = sessionStorage.getItem("currentUserEmail");
+    setLoggedInEmail(email);
+    const isAdmin = !email;
+    const userRole = sessionStorage.getItem("userRole");
+    const isManager = userRole === "manager" || userRole === "admin";
+    const loggedInEmp = employees.find((e) => e.email === email);
+    setCanSeeAll(isAdmin || isManager || isManagerRole(loggedInEmp?.role ?? ""));
+    setAuthChecked(true);
   }, [router]);
 
   useEffect(() => {
@@ -55,6 +131,8 @@ export default function AppraisalsPage() {
       setAppraisals(map);
     });
   }, [authChecked]);
+
+  useEffect(() => { setPage(1); }, [search, deptFilter, statusFilter]);
 
   if (!authChecked) return null;
 
@@ -68,6 +146,17 @@ export default function AppraisalsPage() {
     const matchStatus = statusFilter === "All" || appraisalStatus === statusFilter;
     return matchSearch && matchDept && matchStatus;
   });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  function handlePageChange(next: number) {
+    setPage(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const from = filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, filtered.length);
 
   const total = employees.length;
   const counts = { pending: 0, "self-submitted": 0, "manager-submitted": 0, complete: 0 };
@@ -191,9 +280,16 @@ export default function AppraisalsPage() {
           ))}
         </div>
 
-        <p className="text-xs text-stone-400 mb-5">
-          {filtered.length === 0 ? "No employees found" : `${filtered.length} employee${filtered.length !== 1 ? "s" : ""}`}
-        </p>
+        <div className="flex items-center justify-between mb-5 min-h-[20px]">
+          <p className="text-xs text-stone-400">
+            {filtered.length === 0
+              ? "No employees found"
+              : `Showing ${from}–${to} of ${filtered.length} employee${filtered.length !== 1 ? "s" : ""}`}
+          </p>
+          {totalPages > 1 && (
+            <p className="text-xs text-stone-400">Page {page} of {totalPages}</p>
+          )}
+        </div>
 
         {/* Employee grid */}
         {filtered.length === 0 ? (
@@ -202,21 +298,37 @@ export default function AppraisalsPage() {
             <p className="text-sm text-stone-400 mt-1">Try a different search or filter</p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filtered.map((emp) => {
+            {paginated.map((emp) => {
               const appraisal = appraisals[emp.id];
               const status: AppraisalStatus = appraisal ? computeStatus(appraisal) : "pending";
               const meta = statusMeta[status];
               const selfAvg = appraisal?.self_review ? avgScore(appraisal.self_review) : 0;
               const mgrAvg = appraisal?.manager_review ? avgScore(appraisal.manager_review) : 0;
+              const isOwn = emp.email === loggedInEmail;
+              const isClickable = canSeeAll || isOwn;
 
               return (
                 <button
                   key={emp.id}
-                  onClick={() => router.push(`/appraisals/${emp.id}`)}
-                  className="group relative flex flex-col bg-white rounded-3xl overflow-hidden text-left border border-stone-200/50 shadow-md hover:shadow-2xl hover:-translate-y-1.5 hover:border-stone-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-stone-400/30"
+                  onClick={() => isClickable && router.push(`/appraisals/${emp.id}`)}
+                  disabled={!isClickable}
+                  className={`group relative flex flex-col bg-white rounded-3xl overflow-hidden text-left border border-stone-200/50 shadow-md transition-all duration-300 focus:outline-none ${
+                    isClickable
+                      ? "hover:shadow-2xl hover:-translate-y-1.5 hover:border-stone-200 focus:ring-2 focus:ring-stone-400/30 cursor-pointer"
+                      : "opacity-50 cursor-not-allowed"
+                  }`}
                 >
                   <div className="bg-gradient-to-br from-[#f5ebe0] to-[#e0c9a6] h-[56px] w-full shrink-0" />
+
+                  {!isClickable && (
+                    <div className="absolute top-3 right-3 z-20">
+                      <svg className="h-4 w-4 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                  )}
 
                   <div className="-mt-8 flex justify-center relative z-10 shrink-0">
                     <div className="h-16 w-16 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl bg-white">
@@ -240,7 +352,7 @@ export default function AppraisalsPage() {
                       {meta.label}
                     </span>
 
-                    {(selfAvg > 0 || mgrAvg > 0) && (
+                    {isClickable && (selfAvg > 0 || mgrAvg > 0) && (
                       <div className="w-full space-y-1.5 pt-1 border-t border-stone-100">
                         {selfAvg > 0 && (
                           <div className="flex items-center justify-between gap-2">
@@ -259,7 +371,7 @@ export default function AppraisalsPage() {
                       </div>
                     )}
 
-                    {appraisal?.goals && appraisal.goals.length > 0 && (
+                    {isClickable && appraisal?.goals && appraisal.goals.length > 0 && (
                       <div className="flex items-center gap-1.5 text-[10px] text-stone-400">
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -269,11 +381,21 @@ export default function AppraisalsPage() {
                     )}
                   </div>
 
-                  <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-transparent group-hover:ring-stone-400/30 transition-all duration-300 pointer-events-none" />
+                  {isClickable && (
+                    <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-transparent group-hover:ring-stone-400/30 transition-all duration-300 pointer-events-none" />
+                  )}
                 </button>
               );
             })}
           </div>
+
+          {totalPages > 1 && (
+            <div className="mt-10 flex flex-col items-center gap-3">
+              <Pagination current={page} total={totalPages} onChange={handlePageChange} />
+              <p className="text-xs text-stone-400">{from}–{to} of {filtered.length} employees</p>
+            </div>
+          )}
+          </>
         )}
       </main>
     </div>

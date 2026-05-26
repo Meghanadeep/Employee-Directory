@@ -42,8 +42,10 @@ function LoginForm() {
       sessionStorage.setItem("isLoggedIn", "true");
       if (idbUser) {
         sessionStorage.setItem("currentUserEmail", idbUser.email);
+        sessionStorage.setItem("userRole", idbUser.role ?? "employee");
       } else {
         sessionStorage.removeItem("currentUserEmail");
+        sessionStorage.setItem("userRole", "admin");
       }
       router.push("/employees");
     } catch {

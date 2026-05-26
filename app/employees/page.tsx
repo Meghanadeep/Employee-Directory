@@ -1615,6 +1615,7 @@ export default function EmployeesPage() {
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
   const [myOverride, setMyOverride] = useState<EmployeeOverride | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
 
   useEffect(() => {
     if (!sessionStorage.getItem("isLoggedIn")) {
@@ -1654,6 +1655,17 @@ export default function EmployeesPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  const myEmployee = loggedInEmail ? employees.find((e) => e.email === loggedInEmail) ?? null : null;
+  const currentStatus: Employee["status"] = myOverride?.status ?? myEmployee?.status ?? "active";
+
+  async function handleQuickStatusChange(newStatus: Employee["status"]) {
+    if (!loggedInEmail) return;
+    const updated: EmployeeOverride = { ...(myOverride ?? {}), email: loggedInEmail, status: newStatus };
+    await saveOverride(updated);
+    setMyOverride(updated);
+    setStatusOpen(false);
+  }
+
   const from = filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, filtered.length);
 
@@ -1685,6 +1697,46 @@ export default function EmployeesPage() {
               </svg>
               <span className="hidden sm:inline">Appraisals</span>
             </button>
+
+            {myEmployee && (
+              <div className="relative">
+                <button
+                  onClick={() => setStatusOpen((o) => !o)}
+                  className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-100 hover:border-stone-300 transition"
+                >
+                  <span className={`h-2.5 w-2.5 rounded-full ${statusConfig[currentStatus].dot}`} />
+                  <span className="hidden sm:inline">{statusConfig[currentStatus].label}</span>
+                  <svg className="h-3 w-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {statusOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setStatusOpen(false)} />
+                    <div className="absolute right-0 mt-2 z-50 w-36 rounded-2xl border border-stone-200 bg-white shadow-xl overflow-hidden">
+                      {(["active", "away", "busy"] as const).map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => handleQuickStatusChange(s)}
+                          className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-semibold transition hover:bg-stone-50 ${
+                            currentStatus === s ? "text-stone-900 bg-stone-50" : "text-stone-600"
+                          }`}
+                        >
+                          <span className={`h-2 w-2 rounded-full ${statusConfig[s].dot}`} />
+                          {statusConfig[s].label}
+                          {currentStatus === s && (
+                            <svg className="ml-auto h-3.5 w-3.5 text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => {
                 sessionStorage.removeItem("isLoggedIn");
@@ -1778,12 +1830,13 @@ export default function EmployeesPage() {
           <>
             {/* Employee grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {paginated.map((emp) => {
+              {paginated.map((rawEmp) => {
+                const emp = rawEmp.email === loggedInEmail ? applyOverride(rawEmp, myOverride) : rawEmp;
                 const status = statusConfig[emp.status];
                 return (
                   <button
                     key={emp.id}
-                    onClick={() => setSelected(emp)}
+                    onClick={() => setSelected(rawEmp)}
                     className="cursor-pointer group relative flex flex-col bg-white rounded-3xl overflow-hidden text-left border border-stone-200/50 shadow-md hover:shadow-2xl hover:-translate-y-1.5 hover:border-stone-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-stone-400/30 focus:ring-offset-2 focus:ring-offset-[#f5f0e8]"
                   >
                     {/* Gradient banner */}
