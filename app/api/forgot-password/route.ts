@@ -1,9 +1,8 @@
 import { Resend } from "resend";
 import { storeResetToken } from "@/lib/reset-tokens";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: Request) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const { username, email } = await request.json();
 
   if (!username || !email || typeof username !== "string" || typeof email !== "string") {
